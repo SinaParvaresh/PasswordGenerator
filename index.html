@@ -1,128 +1,95 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Random Password Generator</title>
-    <link href="bulma.css" rel="stylesheet"/>
-    <link href="style.css" rel="stylesheet"/>
-</head>
+    <link href="/stylesheets/css/bulma.css" rel="stylesheet" />
+    <link href="/stylesheets/css/style.css" rel="stylesheet" />
+  </head>
 
-<body>
-    <form id="random-gen"> 
-        <div> 
-            <label class="labels">Password Length:</label>
-            <input type="number"  class="pass-num" id="Length"/>
-        </div>
-        <div> 
-            <label class="labels">Include Symbol:</label>
-            <input type="checkbox" class="check" id="Symbol"/>
-            <label>(e.g. !%#$)</label>
-        </div>
-        <div> 
-            <label class="labels">Include Numbers:</label>
-            <input type="checkbox" class="check" id="Numbers"/>
-            <label>(e.g. 1234)</label>
-        </div>
-        <div> 
-            <label class="labels">Include Lowercase:</label>
-            <input type="checkbox" class="check" id="Lowercase"/>
-            <label>(e.g. abcd)</label>
-        </div>
-        <div> 
-            <label class="labels">Include Uppercase:</label>
-            <input type="checkbox" class="check"id="Uppercase"/>
-            <label>(e.g. ABCD)</label>
-        </div>
-        <div id="gen-pass"> <button class="button is-rounded" id="generate-pass">Generate Password</button> </div>
-        
-        <div id="new-password">
-            <label >New Password:</label>
-            <input type="text" id = "pass-text" /> 
-            <button type="button" class="button" id="Copy">Copy</button>
-        </div>
+  <body>
+    <form id="random-gen">
+      <div>
+        <label class="labels">Password Length:</label>
+        <input type="number" class="pass-num" id="Length" />
+      </div>
+      <div>
+        <label class="labels">Include Symbol:</label>
+        <input type="checkbox" class="check" id="Symbol" />
+        <label>(e.g. !%#$)</label>
+      </div>
+      <div>
+        <label class="labels">Include Numbers:</label>
+        <input type="checkbox" class="check" id="Numbers" />
+        <label>(e.g. 1234)</label>
+      </div>
+      <div>
+        <label class="labels">Include Lowercase:</label>
+        <input type="checkbox" class="check" id="Lowercase" />
+        <label>(e.g. abcd)</label>
+      </div>
+      <div>
+        <label class="labels">Include Uppercase:</label>
+        <input type="checkbox" class="check" id="Uppercase" />
+        <label>(e.g. ABCD)</label>
+      </div>
+      <div id="gen-pass">
+        <button class="button is-rounded" id="generate-pass">
+          Generate Password
+        </button>
+      </div>
+
+      <div id="new-password">
+        <label>New Password:</label>
+        <input type="text" id="pass-text" />
+        <button type="button" class="button" id="Copy">Copy</button>
+      </div>
     </form>
     <script>
-        let cb, pass_len, cbArr;
-        const Copy = document.getElementById('Copy');
-        const passtext = document.getElementById('pass-text');
-        
-        //Creating Copy Button Function
-        Copy.onclick = function () {
-            passtext.select();
-            document.execCommand("Copy");
-        };
+      let checkboxes, pass_len;
+      const Copy = document.getElementById("Copy");
+      const passtext = document.getElementById("pass-text");
 
-        const genASCIIRange = (lower, upper) => {
-            let range = [];
-            for (let i = lower; i < upper; i++) {
-                range.push(String.fromCharCode(i));
-            }
-            return range;
-        }
-        
-        let symbolGroups = {
-            Symbol: genASCIIRange(33, 48),
-            Lowercase: genASCIIRange(97, 123),
-            Uppercase: genASCIIRange(65, 91),
-            Numbers: genASCIIRange(48, 58)
-        };
+      //Creating Copy Button Function
+      Copy.onclick = function () {
+        passtext.select();
+        document.execCommand("copy");
+      };
 
-        //get random position in array
-        function getRandomPos(arr) {
-            return Math.floor(Math.random() * arr.length);
-        }
-        
-        document.querySelector("#gen-pass").addEventListener('click', function() {
-            event.preventDefault();
-            cb = document.querySelectorAll(".check:checked");
-            pass_len = parseInt(document.querySelector(".pass-num").value);
-          
-            //# of check boxes must be equal or less than total pass length
-            if (cb.length > pass_len) {
-                return console.error();
-            } 
+      document
+        .querySelector("#gen-pass")
+        .addEventListener("click", function () {
+          event.preventDefault();
+          checkboxes = document.querySelectorAll(".check:checked");
+          pass_len = parseInt(document.querySelector(".pass-num").value);
 
-            cbArr = Array.from(cb);
-            let new_pass = [];
-            let combinedPass = [];
+          //# of check boxes must be equal or less than total pass length
+          if (checkboxes.length > pass_len) {
+            return console.error();
+          }
 
-            for (let i = 0; i < cbArr.length; i++) {
-                const ids = cbArr[i].id;
-                new_pass.push(symbolGroups[ids][getRandomPos(symbolGroups[ids])]);
-                combinedPass = combinedPass.concat(symbolGroups[ids]);
-            }
+          const requestBody = {
+            pass_len: parseInt(document.querySelector(".pass-num").value),
+            includeSymbol: document.querySelector("#Symbol").checked,
+            includeNumbers: document.querySelector("#Numbers").checked,
+            includeLowercase: document.querySelector("#Lowercase").checked,
+            includeUppercase: document.querySelector("#Uppercase").checked,
+          };
 
-            combinedPass = shuffle(combinedPass);
-            for (let i = 0; i < pass_len - cb.length; i++) {
-                new_pass.push(combinedPass[i]);
-            }
-            new_pass = shuffle(new_pass);
-            
-        console.log(new_pass.join('') + "\n-------------------------\n");
-        document.getElementById("pass-text").value = new_pass.join('');
-    
+          fetch("http://localhost:4000/pw", {
+            method: "POST", // *GET, POST, PUT, DELETE, etc.
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(requestBody), // body data type must match "Content-Type" header
+          })
+            .then((response) => response.json())
+            .then(
+              (data) => (document.getElementById("pass-text").value = data)
+            );
         });
-
-        //taken from stack overflow; shuffling an array
-        function shuffle(array) {
-            var currentIndex = array.length, temporaryValue, randomIndex;
-
-            // While there remain elements to shuffle...
-            while (0 !== currentIndex) {
-
-                // Pick a remaining element...
-                randomIndex = Math.floor(Math.random() * currentIndex);
-                currentIndex -= 1;
-
-                // And swap it with the current element.
-                temporaryValue = array[currentIndex];
-                array[currentIndex] = array[randomIndex];
-                array[randomIndex] = temporaryValue;
-        }
-  return array;
-}
     </script>
-</body>
+  </body>
 </html>
